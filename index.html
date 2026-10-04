@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Resmi Sekolah & Sistem Informasi</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    [x-cloak] { display: none !important; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col" 
+      x-data="schoolApp()" 
+      x-init="initApp()">
+
+  <!-- Running Announcement Bar -->
+  <div class="bg-indigo-900 text-white text-xs py-2 px-4 flex justify-between items-center overflow-hidden shadow-inner">
+    <div class="flex items-center space-x-2 whitespace-nowrap overflow-hidden">
+      <span class="bg-red-500 text-white font-bold px-2 py-0.5 rounded text-[10px] uppercase tracking-wider animate-pulse">Pengumuman</span>
+      <marquee class="w-full text-slate-200">
+        Selamat Datang di Portal Informasi Sekolah. Layanan pengusulan mutasi online dan pencarian buku induk kini telah terintegrasi langsung dengan Google Drive & Google Sheets! | Web Application Created & Developed by Heri Santoso MTI 08.
+      </marquee>
+    </div>
+    <div class="hidden md:flex items-center space-x-3 text-xs text-slate-300 ml-4">
+      <i class="far fa-clock"></i> <span x-text="currentDateTime"></span>
+    </div>
+  </div>
+
+  <!-- Navigation Header -->
+  <header class="bg-white shadow-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-20 items-center">
+        <!-- Logo & Branding -->
+        <div class="flex items-center space-x-3 cursor-pointer" @click="activeTab = 'dashboard'">
+          <img :src="schoolLogo" alt="Logo Sekolah" class="h-12 w-12 object-contain rounded-full border-2 border-indigo-600 shadow-sm">
+          <div>
+            <h1 class="text-lg font-bold text-slate-900 leading-tight">SD NEGERI UTAMA</h1>
+            <p class="text-xs text-indigo-600 font-medium">Sistem Informasi & Management Sekolah Digital</p>
+          </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="hidden md:flex space-x-1">
+          <button @click="activeTab = 'dashboard'" :class="activeTab === 'dashboard' ? 'bg-indigo-50 text-indigo-700 font-semibold border-b-2 border-indigo-600' : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-50'" class="px-3 py-2 rounded-t-lg text-sm transition">
+            <i class="fas fa-home mr-1"></i> Dashboard
+          </button>
+          <button @click="activeTab = 'buku-induk'" :class="activeTab === 'buku-induk' ? 'bg-indigo-50 text-indigo-700 font-semibold border-b-2 border-indigo-600' : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-50'" class="px-3 py-2 rounded-t-lg text-sm transition">
+            <i class="fas fa-address-book mr-1"></i> Buku Induk
+          </button>
+          <button @click="activeTab = 'mutasi'" :class="activeTab === 'mutasi' ? 'bg-indigo-50 text-indigo-700 font-semibold border-b-2 border-indigo-600' : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-50'" class="px-3 py-2 rounded-t-lg text-sm transition">
+            <i class="fas fa-exchange-alt mr-1"></i> Pengusulan Mutasi
+          </button>
+          <button @click="activeTab = 'jadwal'" :class="activeTab === 'jadwal' ? 'bg-indigo-50 text-indigo-700 font-semibold border-b-2 border-indigo-600' : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-50'" class="px-3 py-2 rounded-t-lg text-sm transition">
+            <i class="fas fa-calendar-alt mr-1"></i> Agenda & Jadwal
+          </button>
+          <button @click="activeTab = 'links'" :class="activeTab === 'links' ? 'bg-indigo-50 text-indigo-700 font-semibold border-b-2 border-indigo-600' : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-50'" class="px-3 py-2 rounded-t-lg text-sm transition">
+            <i class="fas fa-folder-plus mr-1"></i> Link & Modul
+          </button>
+        </nav>
+
+        <!-- Role Selector Switcher -->
+        <div class="flex items-center space-x-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+          <span class="text-xs font-semibold text-slate-500 hidden lg:inline pl-2"><i class="fas fa-user-shield mr-1"></i> Akses:</span>
+          <select x-model="currentRole" @change="handleRoleChange()" class="bg-white text-xs font-bold text-slate-800 rounded-lg px-2.5 py-1.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm cursor-pointer">
+            <option value="pengunjung">👤 Pengunjung / Siswa</option>
+            <option value="ops">⚙️ Operator (Ops)</option>
+            <option value="ks">👑 Kepala Sekolah (KS)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- Role Indicator Banner -->
+    <div class="mb-6 p-4 rounded-2xl shadow-sm border flex items-center justify-between"
+         :class="{
+            'bg-blue-50 border-blue-200 text-blue-900': currentRole === 'pengunjung',
+            'bg-amber-50 border-amber-200 text-amber-900': currentRole === 'ops',
+            'bg-emerald-50 border-emerald-200 text-emerald-900': currentRole === 'ks'
+         }">
+      <div class="flex items-center space-x-3">
+        <div class="p-2.5 rounded-xl" :class="{
+            'bg-blue-500 text-white': currentRole === 'pengunjung',
+            'bg-amber-500 text-white': currentRole === 'ops',
+            'bg-emerald-600 text-white': currentRole === 'ks'
+        }">
+          <i class="fas" :class="{
+             'fa-user': currentRole === 'pengunjung',
+             'fa-user-cog': currentRole === 'ops',
+             'fa-user-tie': currentRole === 'ks'
+          }"></i>
+        </div>
+        <div>
+          <h2 class="text-sm font-bold uppercase tracking-wide">
+            Mode Akses: <span x-text="getRoleLabel()"></span>
+          </h2>
+          <p class="text-xs opacity-90" x-text="getRoleDescription()"></p>
+        </div>
+      </div>
+      <template x-if="currentRole !== 'pengunjung'">
+        <button @click="openCustomizationModal()" class="px-3 py-1.5 bg-white text-xs font-semibold rounded-lg shadow-sm border hover:bg-slate-50 transition flex items-center space-x-1">
+          <i class="fas fa-palette text-indigo-600"></i>
+          <span>Ubah Banner & Logo</span>
+        </button>
+      </template>
+    </div>
+
+    <!-- TAB 1: DASHBOARD -->
+    <div x-show="activeTab === 'dashboard'" x-cloak class="space-y-6">
+      <!-- Hero Banner -->
+      <div class="relative rounded-3xl overflow-hidden shadow-lg bg-slate-900 min-h-[220px] flex items-center">
+        <img :src="heroBanner" alt="Foto Dashboard Sekolah" class="absolute inset-0 w-full h-full object-cover opacity-40">
+        <div class="relative z-10 p-6 md:p-10 text-white max-w-2xl">
+          <span class="bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-3 inline-block">Portal Digital</span>
+          <h2 class="text-2xl md:text-4xl font-extrabold leading-tight mb-2">Selamat Datang di Portal Resmi Sekolah</h2>
+          <p class="text-sm md:text-base text-slate-200 mb-4">Pusat Informasi, Pengelolaan Buku Induk Siswa Digital, dan Pengusulan Mutasi Terintegrasi.</p>
+          <div class="flex flex-wrap gap-2">
+            <button @click="activeTab = 'mutasi'" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow transition">
+              <i class="fas fa-paper-plane mr-1"></i> Ajukan Mutasi
+            </button>
+            <button @click="activeTab = 'buku-induk'" class="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition">
+              <i class="fas fa-search mr-1"></i> Cari Buku Induk
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Link Cards Grid -->
+      <div>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-base font-bold text-slate-800 flex items-center">
+            <i class="fas fa-th-large text-indigo-600 mr-2"></i> Akses & Layanan Cepat
+          </h3>
+          <template x-if="currentRole === 'ops' || currentRole === 'ks'">
+            <button @click="activeTab = 'links'" class="text-xs text-indigo-600 font-semibold hover:underline">
+              + Kelola Link & Folder
+            </button>
+          </template>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <template x-for="link in externalLinks" :key="link.id">
+            <a :href="link.url" target="_blank" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition flex flex-col justify-between group">
+              <div>
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-3 text-white" :class="link.bgColor || 'bg-indigo-600'">
+                  <i :class="link.icon || 'fas fa-link'"></i>
+                </div>
+                <h4 class="font-bold text-sm text-slate-800 group-hover:text-indigo-600 transition" x-text="link.title"></h4>
+                <p class="text-xs text-slate-500 mt-1 line-clamp-2" x-text="link.description"></p>
+              </div>
+              <div class="mt-4 text-xs font-semibold text-indigo-600 flex items-center">
+                <span>Buka Akses</span> <i class="fas fa-arrow-right ml-1 text-[10px] group-hover:translate-x-1 transition"></i>
+              </div>
+            </a>
+          </template>
+        </div>
+      </div>
+
+      <!-- Noticeboard / Visual Announcement -->
+      <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+        <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center">
+          <i class="fas fa-bullhorn text-indigo-600 mr-2"></i> Papan Pengumuman Sekolah
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+          <img :src="noticeboardBanner" alt="Papan Pengumuman" class="w-full h-48 object-cover rounded-2xl border border-slate-100 shadow-sm">
+          <div class="space-y-3">
+            <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md">Informasi Terbaru</span>
+            <h4 class="text-lg font-bold text-slate-900">Digitalisasi Layanan Administrasi Sekolah</h4>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Seluruh berkas pengusulan mutasi siswa dan pendataan buku induk telah terhubung langsung secara real-time dengan penyimpanan cloud Google Drive & Google Sheets untuk efisiensi dan transparansi data.
+            </p>
+            <div class="pt-2">
+              <button @click="syncDataFromGoogle()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs rounded-xl font-medium shadow transition flex items-center space-x-2">
+                <i class="fas fa-sync-alt" :class="{'animate-spin': isSyncing}"></i>
+                <span>Sinkronkan Data Google Sheets</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: BUKU INDUK DIGITAL -->
+    <div x-show="activeTab === 'buku-induk'" x-cloak class="space-y-6">
+      <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+        <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
+          <div>
+            <h3 class="text-lg font-bold text-slate-900">Buku Induk Siswa Digital</h3>
+            <p class="text-xs text-slate-500">Database lengkap data siswa terdaftar dan terintegrasi Google Sheets</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button @click="syncDataFromGoogle()" class="px-3 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl hover:bg-slate-200 transition flex items-center space-x-1">
+              <i class="fas fa-sync" :class="{'animate-spin': isSyncing}"></i>
+              <span>Refresh Data</span>
+            </button>
+            <template x-if="currentRole === 'ops' || currentRole === 'ks'">
+              <button @click="openStudentModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow transition flex items-center space-x-1">
+                <i class="fas fa-plus"></i>
+                <span>+ Tambah Data Siswa</span>
+              </button>
+            </template>
+          </div>
+        </div>
+
+        <!-- Filter & Search Bar -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+          <div class="relative md:col-span-2">
+            <i class="fas fa-search absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+            <input type="text" x-model="searchStudent" placeholder="Cari NIS, NISN, atau Nama Siswa..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <select x-model="filterKelas" class="w-full py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">Semua Kelas</option>
+            <option value="Kelas 1">Kelas 1</option>
+            <option value="Kelas 2">Kelas 2</option>
+            <option value="Kelas 3">Kelas 3</option>
+            <option value="Kelas 4">Kelas 4</option>
+            <option value="Kelas 5">Kelas 5</option>
+            <option value="Kelas 6">Kelas 6</option>
+          </select>
+        </div>
+
+        <!-- Table Data -->
+        <div class="overflow-x-auto rounded-2xl border border-slate-200">
+          <table class="w-full text-xs text-left text-slate-600">
+            <thead class="bg-slate-50 text-slate-700 uppercase font-bold border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-4">NIS / NISN</th>
+                <th class="py-3 px-4">Nama Lengkap</th>
+                <th class="py-3 px-4">Kelas</th>
+                <th class="py-3 px-4">L/P</th>
+                <th class="py-3 px-4">Berkas Digital (Drive)</th>
+                <template x-if="currentRole === 'ops' || currentRole === 'ks'">
+                  <th class="py-3 px-4 text-center">Aksi</th>
+                </template>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <template x-for="(siswa, idx) in filteredStudents" :key="idx">
+                <tr class="hover:bg-slate-50/80 transition">
+                  <td class="py-3 px-4 font-mono font-medium text-slate-900" x-text="siswa.nis"></td>
+                  <td class="py-3 px-4 font-bold text-slate-800" x-text="siswa.nama"></td>
+                  <td class="py-3 px-4">
+                    <span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-semibold text-[11px]" x-text="siswa.kelas"></span>
+                  </td>
+                  <td class="py-3 px-4" x-text="siswa.jk"></td>
+                  <td class="py-3 px-4">
+                    <template x-if="siswa.fileUrl && siswa.fileUrl !== '-'">
+                      <a :href="siswa.fileUrl" target="_blank" class="inline-flex items-center text-indigo-600 font-semibold hover:underline">
+                        <i class="fas fa-file-pdf text-red-500 mr-1.5 text-sm"></i> Lihat Berkas
+                      </a>
+                    </template>
+                    <template x-if="!siswa.fileUrl || siswa.fileUrl === '-'">
+                      <span class="text-slate-400 italic">Tidak Ada File</span>
+                    </template>
+                  </td>
+                  <template x-if="currentRole === 'ops' || currentRole === 'ks'">
+                    <td class="py-3 px-4 text-center space-x-1">
+                      <button @click="deleteStudent(idx)" class="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition">
+                        <i class="fas fa-trash-alt"></i>
+                      </button>
+                    </td>
+                  </template>
+                </tr>
+              </template>
+              <template x-if="filteredStudents.length === 0">
+                <tr>
+                  <td colspan="6" class="text-center py-8 text-slate-400">
+                    <i class="fas fa-folder-open text-3xl mb-2 block"></i>
+                    Belum ada data siswa ditemukan.
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: PENGUSULAN MUTASI -->
+    <div x-show="activeTab === 'mutasi'" x-cloak class="space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Form Pengusulan -->
+        <div class="lg:col-span-1 bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+          <h3 class="text-lg font-bold text-slate-900 mb-1">Form Pengusulan Mutasi</h3>
+          <p class="text-xs text-slate-500 mb-4">Isi formulir pengajuan mutasi siswa keluar / masuk.</p>
+
+          <form @submit.prevent="submitMutasi()" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap Siswa</label>
+              <input type="text" x-model="mutasiForm.namaSiswa" required placeholder="Nama Siswa" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Sekolah Asal / Tujuan</label>
+              <input type="text" x-model="mutasiForm.sekolahTujuan" required placeholder="SDN Tujuan / Asal" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Alasan Mutasi</label>
+              <textarea x-model="mutasiForm.alasan" required rows="3" placeholder="Alasan kepindahan..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Upload Berkas PDF Surat Mutasi (ke Drive)</label>
+              <input type="file" @change="handleFileUpload($event)" accept="application/pdf,image/*" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+            </div>
+
+            <button type="submit" :disabled="isSubmitting" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl shadow transition flex items-center justify-center space-x-2">
+              <i class="fas fa-paper-plane" x-show="!isSubmitting"></i>
+              <i class="fas fa-spinner animate-spin" x-show="isSubmitting"></i>
+              <span x-text="isSubmitting ? 'Mengirim Data...' : 'Kirim Pengusulan Mutasi'"></span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Tabel Monitoring Status Mutasi -->
+        <div class="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <h3 class="text-lg font-bold text-slate-900">Daftar Pengusulan Mutasi</h3>
+              <p class="text-xs text-slate-500">Monitoring status verifikasi berkas mutasi</p>
+            </div>
+            <button @click="syncDataFromGoogle()" class="px-3 py-1.5 bg-slate-100 text-xs font-semibold rounded-lg hover:bg-slate-200 transition">
+              <i class="fas fa-sync-alt" :class="{'animate-spin': isSyncing}"></i> Refresh
+            </button>
+          </div>
+
+          <div class="overflow-x-auto rounded-2xl border border-slate-200">
+            <table class="w-full text-xs text-left text-slate-600">
+              <thead class="bg-slate-50 text-slate-700 uppercase font-bold border-b border-slate-200">
+                <tr>
+                  <th class="py-3 px-4">Nama Siswa</th>
+                  <th class="py-3 px-4">Tujuan / Asal</th>
+                  <th class="py-3 px-4">Status</th>
+                  <th class="py-3 px-4">Berkas</th>
+                  <template x-if="currentRole === 'ks' || currentRole === 'ops'">
+                    <th class="py-3 px-4 text-center">Persetujuan</th>
+                  </template>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <template x-for="(m, idx) in mutasiList" :key="idx">
+                  <tr class="hover:bg-slate-50/80 transition">
+                    <td class="py-3 px-4 font-bold text-slate-800" x-text="m.namaSiswa"></td>
+                    <td class="py-3 px-4" x-text="m.sekolahTujuan"></td>
+                    <td class="py-3 px-4">
+                      <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                            :class="{
+                              'bg-amber-100 text-amber-800': m.status === 'Pending',
+                              'bg-emerald-100 text-emerald-800': m.status === 'Disetujui',
+                              'bg-red-100 text-red-800': m.status === 'Ditolak'
+                            }" x-text="m.status"></span>
+                    </td>
+                    <td class="py-3 px-4">
+                      <template x-if="m.fileUrl && m.fileUrl !== '-'">
+                        <a :href="m.fileUrl" target="_blank" class="text-indigo-600 font-semibold hover:underline inline-flex items-center">
+                          <i class="fas fa-external-link-alt mr-1 text-[10px]"></i> PDF
+                        </a>
+                      </template>
+                      <template x-if="!m.fileUrl || m.fileUrl === '-'">
+                        <span class="text-slate-400 italic">N/A</span>
+                      </template>
+                    </td>
+                    <template x-if="currentRole === 'ks' || currentRole === 'ops'">
+                      <td class="py-3 px-4 text-center space-x-1">
+                        <button @click="updateMutasiStatus(idx, 'Disetujui')" class="px-2 py-1 bg-emerald-50 text-emerald-700 font-semibold rounded hover:bg-emerald-100 text-[11px]">
+                          <i class="fas fa-check"></i> Setujui
+                        </button>
+                        <button @click="updateMutasiStatus(idx, 'Ditolak')" class="px-2 py-1 bg-red-50 text-red-700 font-semibold rounded hover:bg-red-100 text-[11px]">
+                          <i class="fas fa-times"></i> Tolak
+                        </button>
+                      </td>
+                    </template>
+                  </tr>
+                </template>
+                <template x-if="mutasiList.length === 0">
+                  <tr>
+                    <td colspan="5" class="text-center py-8 text-slate-400">Belum ada usulan mutasi.</td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: AGENDA & JADWAL KEGIATAN -->
+    <div x-show="activeTab === 'jadwal'" x-cloak class="space-y-6">
+      <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <h3 class="text-lg font-bold text-slate-900">Agenda & Jadwal Kegiatan Sekolah</h3>
+            <p class="text-xs text-slate-500">Rencana kegiatan terstruktur tahun ajaran berjalan</p>
+          </div>
+          <template x-if="currentRole === 'ops' || currentRole === 'ks'">
+            <button @click="openEventModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow transition">
+              + Tambah Agenda
+            </button>
+          </template>
+        </div>
+
+        <div class="space-y-3">
+          <template x-for="(e, idx) in scheduleList" :key="idx">
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-start justify-between">
+              <div class="flex space-x-4 items-start">
+                <div class="bg-indigo-600 text-white p-3 rounded-xl text-center min-w-[70px]">
+                  <span class="block text-xs font-bold uppercase" x-text="e.bulan"></span>
+                  <span class="block text-lg font-extrabold" x-text="e.tanggal"></span>
+                </div>
+                <div>
+                  <h4 class="font-bold text-slate-800 text-sm" x-text="e.judul"></h4>
+                  <p class="text-xs text-slate-500 mt-1" x-text="e.keterangan"></p>
+                  <span class="inline-block mt-2 text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-semibold" x-text="e.kategori"></span>
+                </div>
+              </div>
+              <template x-if="currentRole === 'ops' || currentRole === 'ks'">
+                <button @click="deleteEvent(idx)" class="text-red-500 hover:text-red-700 text-xs">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </template>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: LINK & FOLDER CUSTOM -->
+    <div x-show="activeTab === 'links'" x-cloak class="space-y-6">
+      <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <h3 class="text-lg font-bold text-slate-900">Manajemen Link Akses & Folder</h3>
+            <p class="text-xs text-slate-500">Tambahkan link ke Perpustakaan Digital, CBT, Rapor Online, dll.</p>
+          </div>
+          <template x-if="currentRole === 'ops' || currentRole === 'ks'">
+            <button @click="openLinkModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow transition">
+              + Tambah Link / Folder
+            </button>
+          </template>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <template x-for="(l, idx) in externalLinks" :key="idx">
+            <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50 flex flex-col justify-between">
+              <div>
+                <div class="flex justify-between items-start">
+                  <span class="text-xs font-bold text-indigo-600 uppercase" x-text="l.kategori || 'Akses'"></span>
+                  <template x-if="currentRole === 'ops' || currentRole === 'ks'">
+                    <button @click="deleteLink(idx)" class="text-red-400 hover:text-red-600 text-xs">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </template>
+                </div>
+                <h4 class="font-bold text-slate-800 text-sm mt-1" x-text="l.title"></h4>
+                <p class="text-xs text-slate-500 mt-1" x-text="l.description"></p>
+              </div>
+              <a :href="l.url" target="_blank" class="mt-4 inline-block text-center w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl shadow transition">
+                Buka Link <i class="fas fa-external-link-alt ml-1"></i>
+              </a>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: UBAH LOGO & BANNER HERO -->
+  <div x-show="showCustomModal" x-cloak class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-slate-900">Ubah Logo & Banner Visual</h3>
+        <button @click="showCustomModal = false" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold mb-1">URL Logo Sekolah</label>
+          <input type="text" x-model="schoolLogo" class="w-full px-3 py-2 border rounded-xl text-xs">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1">URL Foto Dashboard (Hero)</label>
+          <input type="text" x-model="heroBanner" class="w-full px-3 py-2 border rounded-xl text-xs">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1">URL Papan Pengumuman Visual</label>
+          <input type="text" x-model="noticeboardBanner" class="w-full px-3 py-2 border rounded-xl text-xs">
+        </div>
+      </div>
+      <div class="flex justify-end space-x-2 pt-2">
+        <button @click="resetBranding()" class="px-3 py-2 text-xs bg-slate-100 text-slate-600 rounded-xl font-semibold">Reset Default</button>
+        <button @click="saveBranding()" class="px-4 py-2 text-xs bg-indigo-600 text-white rounded-xl font-semibold">Simpan Perubahan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: TAMBAH SISWA -->
+  <div x-show="showStudentModal" x-cloak class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-slate-900">Tambah Siswa Baru (Buku Induk)</h3>
+        <button @click="showStudentModal = false" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+      </div>
+      <form @submit.prevent="saveStudent()" class="space-y-3">
+        <input type="text" x-model="studentForm.nis" placeholder="NIS / NISN" required class="w-full px-3 py-2 border rounded-xl text-xs">
+        <input type="text" x-model="studentForm.nama" placeholder="Nama Lengkap" required class="w-full px-3 py-2 border rounded-xl text-xs">
+        <select x-model="studentForm.kelas" class="w-full px-3 py-2 border rounded-xl text-xs">
+          <option value="Kelas 1">Kelas 1</option>
+          <option value="Kelas 2">Kelas 2</option>
+          <option value="Kelas 3">Kelas 3</option>
+          <option value="Kelas 4">Kelas 4</option>
+          <option value="Kelas 5">Kelas 5</option>
+          <option value="Kelas 6">Kelas 6</option>
+        </select>
+        <select x-model="studentForm.jk" class="w-full px-3 py-2 border rounded-xl text-xs">
+          <option value="Laki-laki">Laki-laki</option>
+          <option value="Perempuan">Perempuan</option>
+        </select>
+        <div>
+          <label class="block text-xs font-semibold mb-1">Upload PDF Berkas Siswa (ke Drive)</label>
+          <input type="file" @change="handleStudentFileUpload($event)" accept="application/pdf,image/*" class="w-full text-xs">
+        </div>
+        <button type="submit" :disabled="isSubmitting" class="w-full py-2 bg-indigo-600 text-white font-semibold text-xs rounded-xl">
+          <span x-text="isSubmitting ? 'Menyimpan...' : 'Simpan Data'"></span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: TAMBAH LINK -->
+  <div x-show="showLinkModal" x-cloak class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-slate-900">Tambah Link / Modul Akses</h3>
+        <button @click="showLinkModal = false" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+      </div>
+      <form @submit.prevent="saveLink()" class="space-y-3">
+        <input type="text" x-model="linkForm.title" placeholder="Judul Link (misal: Perpustakaan Digital)" required class="w-full px-3 py-2 border rounded-xl text-xs">
+        <input type="url" x-model="linkForm.url" placeholder="URL Target (https://...)" required class="w-full px-3 py-2 border rounded-xl text-xs">
+        <input type="text" x-model="linkForm.description" placeholder="Deskripsi Singkat" class="w-full px-3 py-2 border rounded-xl text-xs">
+        <button type="submit" class="w-full py-2 bg-indigo-600 text-white font-semibold text-xs rounded-xl">Simpan Link</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-slate-900 text-slate-400 text-xs py-8 mt-12 border-t border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div>
+        <p class="font-bold text-white text-sm">Portal Web Sekolah Digital</p>
+        <p class="mt-1">Terintegrasi Google Sheets & Google Drive Cloud Storage.</p>
+      </div>
+      <div class="text-center md:text-right">
+        <p class="text-slate-300 font-medium">Web Application Created & Developed by</p>
+        <p class="text-indigo-400 font-bold text-sm tracking-wide">Heri Santoso MTI 08</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Application Logic -->
+  <script>
+    // URL Web App Google Apps Script Anda yang Sudah Dideploy
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyFiDcELe17NY8CiaLZdOsczvOQcm01pxKWVrwiromo5404Y5djlNnY1iOIf29J-fN7Tw/exec";
+
+    function schoolApp() {
+      return {
+        activeTab: 'dashboard',
+        currentRole: 'pengunjung',
+        currentDateTime: '',
+        isSubmitting: false,
+        isSyncing: false,
+
+        // Branding
+        schoolLogo: localStorage.getItem('schoolLogo') || 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=150',
+        heroBanner: localStorage.getItem('heroBanner') || 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=1200',
+        noticeboardBanner: localStorage.getItem('noticeboardBanner') || 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=600',
+
+        // Modals
+        showCustomModal: false,
+        showStudentModal: false,
+        showLinkModal: false,
+
+        // Data Storage
+        searchStudent: '',
+        filterKelas: '',
+        uploadedFileBase64: '',
+        uploadedFileName: '',
+
+        mutasiForm: { namaSiswa: '', sekolahTujuan: '', alasan: '' },
+        studentForm: { nis: '', nama: '', kelas: 'Kelas 1', jk: 'Laki-laki' },
+        linkForm: { title: '', url: '', description: '' },
+
+        mutasiList: JSON.parse(localStorage.getItem('mutasiList')) || [
+          { namaSiswa: 'Budi Santoso', sekolahTujuan: 'SDN 02 Kota', alasan: 'Pindah Tugas Orang Tua', status: 'Disetujui', fileUrl: '-' }
+        ],
+
+        students: JSON.parse(localStorage.getItem('students')) || [
+          { nis: '2024001', nama: 'Ahmad Fauzi', kelas: 'Kelas 1', jk: 'Laki-laki', fileUrl: '-' },
+          { nis: '2024002', nama: 'Siti Aminah', kelas: 'Kelas 2', jk: 'Perempuan', fileUrl: '-' }
+        ],
+
+        externalLinks: JSON.parse(localStorage.getItem('externalLinks')) || [
+          { title: 'Perpustakaan Digital', url: 'https://perpusnas.go.id', description: 'Akses koleksi buku digital sekolah', icon: 'fas fa-book-reader', bgColor: 'bg-emerald-600' },
+          { title: 'Rapor Digital (RDM)', url: '#', description: 'Portal penilaian hasil belajar', icon: 'fas fa-file-invoice-dollar', bgColor: 'bg-indigo-600' }
+        ],
+
+        scheduleList: JSON.parse(localStorage.getItem('scheduleList')) || [
+          { tanggal: '15', bulan: 'OKT', judul: 'Penilaian Tengah Semester (PTS)', keterangan: 'Dilaksanakan untuk seluruh kelas 1-6', kategori: 'Akademik' }
+        ],
+
+        initApp() {
+          this.updateClock();
+          setInterval(() => this.updateClock(), 1000);
+          this.syncDataFromGoogle();
+        },
+
+        updateClock() {
+          const now = new Date();
+          this.currentDateTime = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }) + ' ' + now.toLocaleTimeString('id-ID');
+        },
+
+        getRoleLabel() {
+          if (this.currentRole === 'ops') return 'Operator Sekolah (Ops)';
+          if (this.currentRole === 'ks') return 'Kepala Sekolah (KS)';
+          return 'Pengunjung / Siswa';
+        },
+
+        getRoleDescription() {
+          if (this.currentRole === 'ops') return 'Hak Akses: Input Data Siswa, Kelola Link, dan Proses Mutasi.';
+          if (this.currentRole === 'ks') return 'Hak Akses: Persetujuan Mutasi dan Monitoring Laporan.';
+          return 'Mode Tampilan Publik & Pengajuan Form.';
+        },
+
+        handleRoleChange() {
+          Swal.fire({
+            title: 'Akses Diperbarui',
+            text: 'Anda masuk sebagai ' + this.getRoleLabel(),
+            icon: 'info',
+            timer: 1500,
+            showConfirmButton: false
+          });
+        },
+
+        handleFileUpload(e) {
+          const file = e.target.files[0];
+          if (!file) return;
+          this.uploadedFileName = file.name;
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            this.uploadedFileBase64 = event.target.result.split(',')[1];
+          };
+          reader.readAsDataURL(file);
+        },
+
+        handleStudentFileUpload(e) {
+          this.handleFileUpload(e);
+        },
+
+        async submitMutasi() {
+          this.isSubmitting = true;
+          const payload = {
+            sheetName: 'Mutasi',
+            namaSiswa: this.mutasiForm.namaSiswa,
+            sekolahTujuan: this.mutasiForm.sekolahTujuan,
+            alasan: this.mutasiForm.alasan,
+            status: 'Pending',
+            fileBase64: this.uploadedFileBase64,
+            fileName: this.uploadedFileName
+          };
+
+          try {
+            if (GOOGLE_SCRIPT_URL) {
+              await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+              });
+            }
+
+            this.mutasiList.unshift({
+              namaSiswa: payload.namaSiswa,
+              sekolahTujuan: payload.sekolahTujuan,
+              alasan: payload.alasan,
+              status: 'Pending',
+              fileUrl: '-'
+            });
+
+            localStorage.setItem('mutasiList', JSON.stringify(this.mutasiList));
+            Swal.fire('Berhasil!', 'Pengusulan mutasi berhasil terkirim.', 'success');
+            this.mutasiForm = { namaSiswa: '', sekolahTujuan: '', alasan: '' };
+            this.uploadedFileBase64 = '';
+          } catch (err) {
+            Swal.fire('Error', 'Gagal terhubung ke Google Sheets', 'error');
+          } finally {
+            this.isSubmitting = false;
+          }
+        },
+
+        async saveStudent() {
+          this.isSubmitting = true;
+          const payload = {
+            sheetName: 'BukuInduk',
+            nis: this.studentForm.nis,
+            nama: this.studentForm.nama,
+            kelas: this.studentForm.kelas,
+            jk: this.studentForm.jk,
+            fileBase64: this.uploadedFileBase64,
+            fileName: this.uploadedFileName
+          };
+
+          try {
+            if (GOOGLE_SCRIPT_URL) {
+              await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+              });
+            }
+
+            this.students.unshift({
+              nis: payload.nis,
+              nama: payload.nama,
+              kelas: payload.kelas,
+              jk: payload.jk,
+              fileUrl: '-'
+            });
+
+            localStorage.setItem('students', JSON.stringify(this.students));
+            Swal.fire('Tersimpan!', 'Data siswa berhasil ditambahkan.', 'success');
+            this.showStudentModal = false;
+            this.studentForm = { nis: '', nama: '', kelas: 'Kelas 1', jk: 'Laki-laki' };
+            this.uploadedFileBase64 = '';
+          } catch (err) {
+            Swal.fire('Error', 'Gagal menyimpan data.', 'error');
+          } finally {
+            this.isSubmitting = false;
+          }
+        },
+
+        async syncDataFromGoogle() {
+          if (!GOOGLE_SCRIPT_URL) return;
+          this.isSyncing = true;
+          try {
+            const resBuku = await fetch(GOOGLE_SCRIPT_URL + '?sheetName=BukuInduk');
+            const dataBuku = await resBuku.json();
+            if (Array.isArray(dataBuku) && dataBuku.length > 1) {
+              this.students = dataBuku.slice(1).map(row => ({
+                nis: row[1] || '-',
+                nama: row[2] || '-',
+                kelas: row[3] || 'Kelas 1',
+                jk: row[4] || 'L-P',
+                fileUrl: row[5] || '-'
+              }));
+              localStorage.setItem('students', JSON.stringify(this.students));
+            }
+
+            const resMutasi = await fetch(GOOGLE_SCRIPT_URL + '?sheetName=Mutasi');
+            const dataMutasi = await resMutasi.json();
+            if (Array.isArray(dataMutasi) && dataMutasi.length > 1) {
+              this.mutasiList = dataMutasi.slice(1).map(row => ({
+                namaSiswa: row[1] || '-',
+                sekolahTujuan: row[2] || '-',
+                alasan: row[3] || '-',
+                status: row[4] || 'Pending',
+                fileUrl: row[5] || '-'
+              }));
+              localStorage.setItem('mutasiList', JSON.stringify(this.mutasiList));
+            }
+          } catch (e) {
+            console.log("Sync error:", e);
+          } finally {
+            this.isSyncing = false;
+          }
+        },
+
+        updateMutasiStatus(idx, status) {
+          this.mutasiList[idx].status = status;
+          localStorage.setItem('mutasiList', JSON.stringify(this.mutasiList));
+          Swal.fire('Diperbarui', 'Status mutasi diubah menjadi ' + status, 'success');
+        },
+
+        deleteStudent(idx) {
+          this.students.splice(idx, 1);
+          localStorage.setItem('students', JSON.stringify(this.students));
+        },
+
+        openCustomizationModal() { this.showCustomModal = true; },
+        saveBranding() {
+          localStorage.setItem('schoolLogo', this.schoolLogo);
+          localStorage.setItem('heroBanner', this.heroBanner);
+          localStorage.setItem('noticeboardBanner', this.noticeboardBanner);
+          this.showCustomModal = false;
+          Swal.fire('Tersimpan', 'Tampilan web diperbarui', 'success');
+        },
+        resetBranding() {
+          this.schoolLogo = 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=150';
+          this.heroBanner = 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=1200';
+          this.noticeboardBanner = 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=600';
+          this.saveBranding();
+        },
+
+        openStudentModal() { this.showStudentModal = true; },
+        openLinkModal() { this.showLinkModal = true; },
+        saveLink() {
+          this.externalLinks.push({ ...this.linkForm, icon: 'fas fa-link', bgColor: 'bg-indigo-600' });
+          localStorage.setItem('externalLinks', JSON.stringify(this.externalLinks));
+          this.showLinkModal = false;
+          this.linkForm = { title: '', url: '', description: '' };
+        },
+        deleteLink(idx) {
+          this.externalLinks.splice(idx, 1);
+          localStorage.setItem('externalLinks', JSON.stringify(this.externalLinks));
+        },
+
+        get filteredStudents() {
+          return this.students.filter(s => {
+            const matchesSearch = s.nama.toLowerCase().includes(this.searchStudent.toLowerCase()) || s.nis.includes(this.searchStudent);
+            const matchesKelas = this.filterKelas === '' || s.kelas === this.filterKelas;
+            return matchesSearch && matchesKelas;
+          });
+        }
+      }
+    }
+  </script>
+</body>
+</html>
