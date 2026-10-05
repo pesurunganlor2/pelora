@@ -61,14 +61,14 @@
             <i class="fas fa-calendar-alt mr-1"></i> Agenda & Jadwal
           </button>
           <button @click="activeTab = 'links'" :class="activeTab === 'links' ? 'bg-indigo-50 text-indigo-700 font-semibold border-b-2 border-indigo-600' : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-50'" class="px-3 py-2 rounded-t-lg text-sm transition">
-            <i class="fas fa-folder-plus mr-1"></i> Link & Modul
+            <i class="fas fa-folder-plus mr-1"></i> Link, YT & IG
           </button>
         </nav>
 
-        <!-- Role Selector Switcher -->
+        <!-- Role Selector Switcher dengan Password Protection -->
         <div class="flex items-center space-x-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
           <span class="text-xs font-semibold text-slate-500 hidden lg:inline pl-2"><i class="fas fa-user-shield mr-1"></i> Akses:</span>
-          <select x-model="currentRole" @change="handleRoleChange()" class="bg-white text-xs font-bold text-slate-800 rounded-lg px-2.5 py-1.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm cursor-pointer">
+          <select x-model="pendingRole" @change="requestRoleChange()" class="bg-white text-xs font-bold text-slate-800 rounded-lg px-2.5 py-1.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm cursor-pointer">
             <option value="pengunjung">👤 Pengunjung / Siswa</option>
             <option value="ops">⚙ Operator (Ops)</option>
             <option value="ks">👑 Kepala Sekolah (KS)</option>
@@ -102,17 +102,25 @@
         </div>
         <div>
           <h2 class="text-sm font-bold uppercase tracking-wide">
-            Mode Akses: <span x-text="getRoleLabel()"></span>
+            Mode Akses Terverifikasi: <span x-text="getRoleLabel()"></span>
           </h2>
           <p class="text-xs opacity-90" x-text="getRoleDescription()"></p>
         </div>
       </div>
-      <template x-if="currentRole !== 'pengunjung'">
-        <button @click="openCustomizationModal()" class="px-3 py-1.5 bg-white text-xs font-semibold rounded-lg shadow-sm border hover:bg-slate-50 transition flex items-center space-x-1">
-          <i class="fas fa-palette text-indigo-600"></i>
-          <span>Ubah Banner & Logo</span>
-        </button>
-      </template>
+      <div class="flex items-center space-x-2">
+        <template x-if="currentRole !== 'pengunjung'">
+          <button @click="openCustomizationModal()" class="px-3 py-1.5 bg-white text-xs font-semibold rounded-lg shadow-sm border hover:bg-slate-50 transition flex items-center space-x-1">
+            <i class="fas fa-palette text-indigo-600"></i>
+            <span>Ubah Branding</span>
+          </button>
+        </template>
+        <template x-if="currentRole !== 'pengunjung'">
+          <button @click="openPasswordModal()" class="px-3 py-1.5 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-lg border border-indigo-200 hover:bg-indigo-100 transition flex items-center space-x-1">
+            <i class="fas fa-key"></i>
+            <span>Ganti Password</span>
+          </button>
+        </template>
+      </div>
     </div>
 
     <!-- TAB 1: DASHBOARD -->
@@ -123,7 +131,7 @@
         <div class="relative z-10 p-6 md:p-10 text-white max-w-2xl">
           <span class="bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-3 inline-block">Portal Digital</span>
           <h2 class="text-2xl md:text-4xl font-extrabold leading-tight mb-2">Selamat Datang di Portal Resmi Sekolah</h2>
-          <p class="text-sm md:text-base text-slate-200 mb-4">Pusat Informasi, Pengelolaan Buku Induk Siswa Digital, dan Pengusulan Mutasi Terintegrasi.</p>
+          <p class="text-sm md:text-base text-slate-200 mb-4">Pusat Informasi, Pengelolaan Buku Induk Siswa Digital, Pengusulan Mutasi Terintegrasi, dan Media Informasi Kreatif.</p>
           <div class="flex flex-wrap gap-2">
             <button @click="activeTab = 'mutasi'" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow transition">
               <i class="fas fa-paper-plane mr-1"></i> Ajukan Mutasi
@@ -143,7 +151,7 @@
           </h3>
           <template x-if="currentRole === 'ops' || currentRole === 'ks'">
             <button @click="activeTab = 'links'" class="text-xs text-indigo-600 font-semibold hover:underline">
-              + Kelola Link & Folder
+              + Kelola Link & Konten
             </button>
           </template>
         </div>
@@ -444,38 +452,49 @@
       </div>
     </div>
 
-    <!-- TAB 5: LINK & FOLDER CUSTOM -->
+    <!-- TAB 5: LINK, YOUTUBE & INSTAGRAM -->
     <div x-show="activeTab === 'links'" x-cloak class="space-y-6">
       <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
         <div class="flex justify-between items-center mb-6">
           <div>
-            <h3 class="text-lg font-bold text-slate-900">Manajemen Link Akses & Folder</h3>
-            <p class="text-xs text-slate-500">Tambahkan link ke Perpustakaan Digital, CBT, Rapor Online, dll.</p>
+            <h3 class="text-lg font-bold text-slate-900">Manajemen Link, Youtube & Instagram</h3>
+            <p class="text-xs text-slate-500">Tambahkan Link Pengumuman, Video Youtube, atau Postingan Instagram Sekolah.</p>
           </div>
           <template x-if="currentRole === 'ops' || currentRole === 'ks'">
             <button @click="openLinkModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow transition">
-              + Tambah Link / Folder
+              + Tambah Konten / Link / Video
             </button>
           </template>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <template x-for="(l, idx) in externalLinks" :key="idx">
-            <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50 flex flex-col justify-between">
+            <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50 flex flex-col justify-between shadow-sm hover:shadow transition">
               <div>
-                <div class="flex justify-between items-start">
-                  <span class="text-xs font-bold text-indigo-600 uppercase" x-text="l.kategori || 'Akses'"></span>
+                <div class="flex justify-between items-start mb-2">
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded uppercase"
+                        :class="l.type === 'youtube' ? 'bg-red-100 text-red-700' : l.type === 'instagram' ? 'bg-pink-100 text-pink-700' : 'bg-indigo-100 text-indigo-700'"
+                        x-text="l.type || 'Web Link'"></span>
                   <template x-if="currentRole === 'ops' || currentRole === 'ks'">
                     <button @click="deleteLink(idx)" class="text-red-400 hover:text-red-600 text-xs">
-                      <i class="fas fa-times"></i>
+                      <i class="fas fa-trash"></i>
                     </button>
                   </template>
                 </div>
-                <h4 class="font-bold text-slate-800 text-sm mt-1" x-text="l.title"></h4>
-                <p class="text-xs text-slate-500 mt-1" x-text="l.description"></p>
+                
+                <h4 class="font-bold text-slate-800 text-sm" x-text="l.title"></h4>
+                <p class="text-xs text-slate-500 mt-1 mb-3" x-text="l.description"></p>
+
+                <!-- Video YouTube Embed -->
+                <template x-if="l.type === 'youtube' && l.embedUrl">
+                  <div class="aspect-video w-full rounded-xl overflow-hidden mb-3 border">
+                    <iframe :src="l.embedUrl" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
+                  </div>
+                </template>
               </div>
-              <a :href="l.url" target="_blank" class="mt-4 inline-block text-center w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl shadow transition">
-                Buka Link <i class="fas fa-external-link-alt ml-1"></i>
+
+              <a :href="l.url" target="_blank" class="inline-block text-center w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl shadow transition mt-2">
+                Buka Link / Media <i class="fas fa-external-link-alt ml-1"></i>
               </a>
             </div>
           </template>
@@ -484,6 +503,29 @@
     </div>
 
   </main>
+
+  <!-- MODAL: GANTI PASSWORD ADMIN -->
+  <div x-show="showPasswordModal" x-cloak class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-slate-900">Ubah Password Admin</h3>
+        <button @click="showPasswordModal = false" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold mb-1">Password Baru Operator (Ops)</label>
+          <input type="password" x-model="passOpsInput" placeholder="Password Operator" class="w-full px-3 py-2 border rounded-xl text-xs">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1">Password Baru Kepala Sekolah (KS)</label>
+          <input type="password" x-model="passKsInput" placeholder="Password KS" class="w-full px-3 py-2 border rounded-xl text-xs">
+        </div>
+      </div>
+      <div class="flex justify-end space-x-2 pt-2">
+        <button @click="saveNewPasswords()" class="px-4 py-2 text-xs bg-indigo-600 text-white rounded-xl font-semibold">Simpan Password Baru</button>
+      </div>
+    </div>
+  </div>
 
   <!-- MODAL: UBAH LOGO & BANNER HERO -->
   <div x-show="showCustomModal" x-cloak class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -546,18 +588,26 @@
     </div>
   </div>
 
-  <!-- MODAL: TAMBAH LINK -->
+  <!-- MODAL: TAMBAH LINK / MEDIA -->
   <div x-show="showLinkModal" x-cloak class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex justify-between items-center">
-        <h3 class="font-bold text-slate-900">Tambah Link / Modul Akses</h3>
+        <h3 class="font-bold text-slate-900">Tambah Link / Konten Media</h3>
         <button @click="showLinkModal = false" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
       </div>
       <form @submit.prevent="saveLink()" class="space-y-3">
-        <input type="text" x-model="linkForm.title" placeholder="Judul Link (misal: Perpustakaan Digital)" required class="w-full px-3 py-2 border rounded-xl text-xs">
+        <div>
+          <label class="block text-xs font-semibold mb-1">Kategori Konten</label>
+          <select x-model="linkForm.type" class="w-full px-3 py-2 border rounded-xl text-xs">
+            <option value="link">🌐 Link Biasa / Web / PDF</option>
+            <option value="youtube">▶ Video YouTube</option>
+            <option value="instagram">📷 Instagram Post / Reels</option>
+          </select>
+        </div>
+        <input type="text" x-model="linkForm.title" placeholder="Judul Konten" required class="w-full px-3 py-2 border rounded-xl text-xs">
         <input type="url" x-model="linkForm.url" placeholder="URL Target (https://...)" required class="w-full px-3 py-2 border rounded-xl text-xs">
-        <input type="text" x-model="linkForm.description" placeholder="Deskripsi Singkat" class="w-full px-3 py-2 border rounded-xl text-xs">
-        <button type="submit" class="w-full py-2 bg-indigo-600 text-white font-semibold text-xs rounded-xl">Simpan Link</button>
+        <input type="text" x-model="linkForm.description" placeholder="Keterangan singkat" class="w-full px-3 py-2 border rounded-xl text-xs">
+        <button type="submit" class="w-full py-2 bg-indigo-600 text-white font-semibold text-xs rounded-xl">Simpan Konten</button>
       </form>
     </div>
   </div>
@@ -578,16 +628,22 @@
 
   <!-- Application Logic -->
   <script>
-    // URL Web App Google Apps Script Terbaru
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyOFqp-BpjFMXOPdBf_uZOyyMyh6mmLShFRR1Y-TLfjtD9miKZ0yUG340VQkzbURn7MaQ/exec";
 
     function schoolApp() {
       return {
         activeTab: 'dashboard',
         currentRole: 'pengunjung',
+        pendingRole: 'pengunjung',
         currentDateTime: '',
         isSubmitting: false,
         isSyncing: false,
+
+        // Passwords Default
+        passOps: localStorage.getItem('passOps') || '123456',
+        passKs: localStorage.getItem('passKs') || 'ks123456',
+        passOpsInput: '',
+        passKsInput: '',
 
         // Branding
         schoolLogo: localStorage.getItem('schoolLogo') || 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=150',
@@ -598,6 +654,7 @@
         showCustomModal: false,
         showStudentModal: false,
         showLinkModal: false,
+        showPasswordModal: false,
 
         // Data Storage
         searchStudent: '',
@@ -607,25 +664,16 @@
 
         mutasiForm: { jenisMutasi: 'Mutasi Masuk', namaSiswa: '', sekolahTujuan: '', alasan: '' },
         studentForm: { nis: '', nama: '', kelas: 'Kelas 1', jk: 'Laki-laki' },
-        linkForm: { title: '', url: '', description: '' },
+        linkForm: { title: '', url: '', description: '', type: 'link' },
 
-        mutasiList: JSON.parse(localStorage.getItem('mutasiList')) || [
-          { jenisMutasi: 'Mutasi Keluar', namaSiswa: 'Budi Santoso', sekolahTujuan: 'SDN 02 Kota', alasan: 'Pindah Tugas Orang Tua', status: 'Disetujui', fileUrl: '-' }
-        ],
-
-        students: JSON.parse(localStorage.getItem('students')) || [
-          { nis: '2024001', nama: 'Ahmad Fauzi', kelas: 'Kelas 1', jk: 'Laki-laki', fileUrl: '-' },
-          { nis: '2024002', nama: 'Siti Aminah', kelas: 'Kelas 2', jk: 'Perempuan', fileUrl: '-' }
-        ],
+        mutasiList: JSON.parse(localStorage.getItem('mutasiList')) || [],
+        students: JSON.parse(localStorage.getItem('students')) || [],
 
         externalLinks: JSON.parse(localStorage.getItem('externalLinks')) || [
-          { title: 'Perpustakaan Digital', url: 'https://perpusnas.go.id', description: 'Akses koleksi buku digital sekolah', icon: 'fas fa-book-reader', bgColor: 'bg-emerald-600' },
-          { title: 'Rapor Digital (RDM)', url: '#', description: 'Portal penilaian hasil belajar', icon: 'fas fa-file-invoice-dollar', bgColor: 'bg-indigo-600' }
+          { title: 'Perpustakaan Digital', url: 'https://perpusnas.go.id', description: 'Akses koleksi buku digital sekolah', icon: 'fas fa-book-reader', bgColor: 'bg-emerald-600', type: 'link' }
         ],
 
-        scheduleList: JSON.parse(localStorage.getItem('scheduleList')) || [
-          { tanggal: '15', bulan: 'OKT', judul: 'Penilaian Tengah Semester (PTS)', keterangan: 'Dilaksanakan untuk seluruh kelas 1-6', kategori: 'Akademik' }
-        ],
+        scheduleList: JSON.parse(localStorage.getItem('scheduleList')) || [],
 
         initApp() {
           this.updateClock();
@@ -645,19 +693,57 @@
         },
 
         getRoleDescription() {
-          if (this.currentRole === 'ops') return 'Hak Akses: Input Data Siswa, Kelola Link, dan Proses Mutasi.';
-          if (this.currentRole === 'ks') return 'Hak Akses: Persetujuan Mutasi dan Monitoring Laporan.';
+          if (this.currentRole === 'ops') return 'Hak Akses Tambah/Hapus Data, Konten & Upload File.';
+          if (this.currentRole === 'ks') return 'Hak Akses Penuh: Verifikasi Mutasi, Kelola Konten & Branding.';
           return 'Mode Tampilan Publik & Pengajuan Form.';
         },
 
-        handleRoleChange() {
-          Swal.fire({
-            title: 'Akses Diperbarui',
-            text: 'Anda masuk sebagai ' + this.getRoleLabel(),
-            icon: 'info',
-            timer: 1500,
-            showConfirmButton: false
+        async requestRoleChange() {
+          const targetRole = this.pendingRole;
+          
+          if (targetRole === 'pengunjung') {
+            this.currentRole = 'pengunjung';
+            Swal.fire('Kembali ke Mode Publik', 'Anda telah keluar dari mode admin.', 'info');
+            return;
+          }
+
+          let requiredPass = (targetRole === 'ops') ? this.passOps : this.passKs;
+          let roleName = (targetRole === 'ops') ? 'Operator (Ops)' : 'Kepala Sekolah (KS)';
+
+          const { value: password } = await Swal.fire({
+            title: 'Verifikasi Akses Admin',
+            text: `Masukkan Password/PIN untuk mode ${roleName}:`,
+            input: 'password',
+            inputPlaceholder: 'Masukkan password...',
+            showCancelButton: true,
+            confirmButtonText: 'Masuk',
+            cancelButtonText: 'Batal'
           });
+
+          if (password === requiredPass) {
+            this.currentRole = targetRole;
+            Swal.fire('Berhasil Log In!', `Selamat datang di mode ${roleName}`, 'success');
+          } else if (password !== undefined) {
+            this.pendingRole = this.currentRole;
+            Swal.fire('Akses Ditolak!', 'Password yang Anda masukkan salah.', 'error');
+          } else {
+            this.pendingRole = this.currentRole;
+          }
+        },
+
+        openPasswordModal() {
+          this.passOpsInput = this.passOps;
+          this.passKsInput = this.passKs;
+          this.showPasswordModal = true;
+        },
+
+        saveNewPasswords() {
+          this.passOps = this.passOpsInput;
+          this.passKs = this.passKsInput;
+          localStorage.setItem('passOps', this.passOps);
+          localStorage.setItem('passKs', this.passKs);
+          this.showPasswordModal = false;
+          Swal.fire('Password Diperbarui!', 'Password baru berhasil disimpan.', 'success');
         },
 
         handleFileUpload(e) {
@@ -671,9 +757,7 @@
           reader.readAsDataURL(file);
         },
 
-        handleStudentFileUpload(e) {
-          this.handleFileUpload(e);
-        },
+        handleStudentFileUpload(e) { this.handleFileUpload(e); },
 
         async submitMutasi() {
           this.isSubmitting = true;
@@ -825,12 +909,30 @@
 
         openStudentModal() { this.showStudentModal = true; },
         openLinkModal() { this.showLinkModal = true; },
+        
         saveLink() {
-          this.externalLinks.push({ ...this.linkForm, icon: 'fas fa-link', bgColor: 'bg-indigo-600' });
+          let embedUrl = '';
+          if (this.linkForm.type === 'youtube') {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = this.linkForm.url.match(regExp);
+            if (match && match[2].length === 11) {
+              embedUrl = 'https://www.youtube.com/embed/' + match[2];
+            }
+          }
+
+          this.externalLinks.push({ 
+            ...this.linkForm, 
+            embedUrl: embedUrl,
+            icon: this.linkForm.type === 'youtube' ? 'fab fa-youtube' : this.linkForm.type === 'instagram' ? 'fab fa-instagram' : 'fas fa-link', 
+            bgColor: this.linkForm.type === 'youtube' ? 'bg-red-600' : this.linkForm.type === 'instagram' ? 'bg-pink-600' : 'bg-indigo-600' 
+          });
+
           localStorage.setItem('externalLinks', JSON.stringify(this.externalLinks));
           this.showLinkModal = false;
-          this.linkForm = { title: '', url: '', description: '' };
+          this.linkForm = { title: '', url: '', description: '', type: 'link' };
+          Swal.fire('Berhasil', 'Konten media berhasil ditambahkan!', 'success');
         },
+
         deleteLink(idx) {
           this.externalLinks.splice(idx, 1);
           localStorage.setItem('externalLinks', JSON.stringify(this.externalLinks));
