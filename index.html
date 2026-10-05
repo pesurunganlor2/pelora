@@ -70,7 +70,7 @@
           <span class="text-xs font-semibold text-slate-500 hidden lg:inline pl-2"><i class="fas fa-user-shield mr-1"></i> Akses:</span>
           <select x-model="currentRole" @change="handleRoleChange()" class="bg-white text-xs font-bold text-slate-800 rounded-lg px-2.5 py-1.5 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm cursor-pointer">
             <option value="pengunjung">👤 Pengunjung / Siswa</option>
-            <option value="ops">⚙️️ Operator (Ops)</option>
+            <option value="ops">⚙ Operator (Ops)</option>
             <option value="ks">👑 Kepala Sekolah (KS)</option>
           </select>
         </div>
@@ -578,8 +578,8 @@
 
   <!-- Application Logic -->
   <script>
-    // URL Web App Google Apps Script Anda yang Sudah Dideploy
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyFiDcELe17NY8CiaLZdOsczvOQcm01pxKWVrwiromo5404Y5djlNnY1iOIf29J-fN7Tw/exec";
+    // URL Web App Google Apps Script Terbaru
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyOFqp-BpjFMXOPdBf_uZOyyMyh6mmLShFRR1Y-TLfjtD9miKZ0yUG340VQkzbURn7MaQ/exec";
 
     function schoolApp() {
       return {
@@ -692,6 +692,8 @@
             if (GOOGLE_SCRIPT_URL) {
               await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
                 body: JSON.stringify(payload)
               });
             }
@@ -732,6 +734,8 @@
             if (GOOGLE_SCRIPT_URL) {
               await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
                 body: JSON.stringify(payload)
               });
             }
@@ -787,7 +791,7 @@
               localStorage.setItem('mutasiList', JSON.stringify(this.mutasiList));
             }
           } catch (e) {
-            console.log("Sync error:", e);
+            console.log("Sync info:", e);
           } finally {
             this.isSyncing = false;
           }
